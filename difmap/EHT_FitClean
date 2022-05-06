@@ -1,0 +1,293 @@
+! DIFMAP script for imaging EHT data
+!
+! Requires Caltech's DIFMAP software for CLEAN imaging reconstruction
+! version v2.5n or above that can be obtained from
+! ftp://ftp.astro.caltech.edu/pub/difmap/difmap.html
+! ========================================================================
+!
+! DIFMAP script developed by the EHT Collaboration (Gomez et al.)
+!
+! ===>> Calling sequence
+! @EHT_FitClean_survey inpath,uvdata,outpath,mask_size,rms_target,source_flux,clean_niter,clean_gain,ALMA_weight,uvbin,uvpower
+!
+! ## Paramaters:
+! %1: inpath: path of uvdata
+! %2: uvdata: uvfits data (expects extension .uvfits)
+! %3: outpath: path with results
+! %4: mask_size: Size (diameter) of a centered circular mask in uas
+! %5: rms_target: controls amount of cleaning as one stopping criteria
+! %6: source_flux: expected source flux - used for initial model and limit in cleaning
+! %7: clean_niter: clean number of iterations
+! %8: clean_gain: clean gain
+! %9: ALMA_weight: ALMA weights in self-calibraiton
+! %10: uvbin: uv-weighting bin size
+! %11: uvpower: uv-weighting error power
+
+! Definition of variables
+! -----------------------
+string script_version,uvdata
+logical interactive,save_results,fin
+integer clean_niter,nx,ny,uvbi,init_type,i
+float uvpower
+float init_size
+float clean_gain
+float source_flux
+float ALMA_weight
+float dx,dy
+float res_rms_noise,old_res_rms_noise,rel_res_dec,rms_target
+float mask_size,dec_pos,last_dec,ra_pos,r,r2,nwin
+float pico,floor
+float old_chisq,sigma,old_sigma
+float dynam,old_dynam
+float sig_imp
+
+
+! Set of parameters
+! =================
+
+! Script version
+script_version = "EHT_FitClean_survey_v4"
+
+! Interactive (shows clean images)
+interactive = False
+
+! Save results
+save_results = True
+
+! Quit Difmap after ending?
+fin = True
+
+! uvdata file
+uvdata = "%%1%%2.uvfits"
+
+! Set of cleaning windows
+mask_size = %4
+
+! Target relative rms reduction during cleaning. Use a large negative number
+! to ignore this forcing using only a target compact flux criterium
+rms_target = %5
+
+! Target flux. Use a large value (i.e. > 10) to ignore this
+source_flux = %6
+
+! Cleaning parameters
+clean_niter = %7
+clean_gain = %8
+
+! Possibility to down-weight ALMA in self-cal. If not, use ALMA_weight=1.0
+ALMA_weight = %9
+
+! uv-weighting parameters
+uvbi = %10
+uvpower = %11
+
+! Mapsize
+nx=1024
+ny=1024
+
+! Pixelsize
+dx=0.002
+dy=0.002
+
+! Sizes to probe for disk model (56,84,4)
+float disk_min,disk_max,disk_step
+disk_min = 56
+disk_max = 84
+disk_step = 4
+
+! Sizes to probe for ring model (36,68,4)
+float ring_min,ring_max,ring_step
+ring_min = 36
+ring_max = 68
+ring_step = 4
+
+
+! ### Routines ###
+! ################
+
+! Creates a centered circular mask of a given size (diameter) in uas
+#+make_circ_mask \
+  dx = imstat(dx) ; dy = imstat(dy) ;\
+  r = %1/2./1000. ; r2 = r*r ;\
+  addwin -r,r,-dy/2,dy/2 ;\
+  nwin = nint(r/dy)+1e-5 ;\
+  do i=1,nwin-1 ;\
+    dec_pos = i*dy ;\
+    ra_pos = sqrt( r2 - (dec_pos*dec_pos) ) ;\
+    addwin -ra_pos,ra_pos,dec_pos-dy/2,dec_pos-dy/2+dy ;\
+    addwin -ra_pos,ra_pos,-dec_pos+dy/2,-dec_pos+dy/2-dy ;\
+  end do ;\
+  last_dec = dec_pos+dy/2 ;\
+  dec_pos = (nwin-1)*dy + (r - (nwin-1)*dy) / 2 ;\
+  ra_pos = sqrt( r2 - (dec_pos*dec_pos) ) ;\
+  addwin -ra_pos,ra_pos,last_dec,r ;\
+  addwin -ra_pos,ra_pos,-last_dec,-r
+
+! => Clean+selfcal with several stopping criteria:
+!    1) Relative decrease in the residuals rms is below a given threshold (%1)
+!    2) A desired cleaned compact flux is reached (%2)
+!    3) Residual map dynamic range is below a given threshold (%3)
+!    4) Residual map dynamic range increases. Active IF keyword %4 is set
+!    5) The visibilities chi2 increases (always active, preventing infinite loop)
+!    6) The image rms is smaller than the expected noise (always active to avoid overcleaning)
+!    Keyword %5 establishes whether intermediate selfcal is performed
+!    Keyword %6 establishes whether a final selfcal is done
+! Example of use clrf 0.0001,2.2,0,false,false,true
+#+clrf \
+  repeat ;\
+    old_res_rms_noise = imstat(rms)/imstat(noise) ;\
+    old_chisq = uvstat(chisq) ;\
+    old_dynam = peak(flux,max)/imstat(rms) ;\
+    clean clean_niter,clean_gain ;\
+    if (%5) selfcal ;\
+    res_rms_noise = imstat(rms)/imstat(noise) ;\
+    dynam = peak(flux,max)/imstat(rms) ;\
+    rel_res_dec = (old_res_rms_noise-res_rms_noise)/old_res_rms_noise ;\
+    print "rel_res_dec =",rel_res_dec ;\
+    print "res_rms_noise =",res_rms_noise ;\
+    print "dynam =",dynam," old_dynam=",old_dynam ;\
+    if ( rel_res_dec <= %1 | model_flux > %2 | dynam <= %3 | \
+         ((%4) & dynam >= old_dynam) | res_rms_noise < 1 ) break ;\
+  until (uvstat(chisq) >= old_chisq) ;\
+  if (%6) selfcal
+
+! => Clean map without contours
+#+limp docont=false; restore 0.02; mapl clean; docont=true
+
+! => Test initial model
+! %1 init_type; %2 init_size
+! Fixed rms_target of 0.001
+#+test_init \
+  clrmod true,true,true ;\
+  uncal true,true,true ;\
+  addcmp source_flux,false,0,0,false,%2/1000.,false,1,false,0,false,%1 ;\
+  selfcal ;\
+  clrmod true,true,true ;\
+  clrf 0.001,source_flux,0,false,true,true
+
+
+! ### Main script ###
+! ###################
+
+! Selects input uv data
+observe `uvdata`
+
+! Cleaning Stokes PI
+select pi
+
+! Fixing of the visibilities weights so that they are not changed in amplitude self-cal
+fix_weights true
+
+! Map size
+mapsize nx,dx,ny,dy
+
+! Weighting
+uvweight uvbi,uvpower
+
+! Setting the mask size (diameter in uas)
+make_circ_mask mask_size
+
+!===>>> Testing for the initial model for phase self-cal that has best closure-phase chisq
+!======
+! >> Point source model smaller than interferometer resolution
+float cpchisq_point
+test_init 1,15
+cpchisq_point = uvstat(clphs_chisq)
+
+! >> Disk source model with sizes between disk_min and disk_max uas in steps of disk_step uas
+float cpchisq_disk,best_cpchisq_disk ; best_cpchisq_disk = 1e6
+float best_cpchisq_disk_size
+do init_size=disk_min,disk_max,disk_step
+  test_init 2,init_size
+  cpchisq_disk = uvstat(clphs_chisq)
+  if (cpchisq_disk < best_cpchisq_disk)
+    best_cpchisq_disk = cpchisq_disk
+    best_cpchisq_disk_size = init_size
+  end if
+end do
+
+! >> Ring source model with sizes between ring_min and ring_max uas in steps of ring_step uas
+float cpchisq_ring,best_cpchisq_ring ; best_cpchisq_ring = 1e6
+float best_cpchisq_ring_size
+do init_size=ring_min,ring_max,ring_step
+  test_init 4,init_size
+  cpchisq_ring = uvstat(clphs_chisq)
+  if (cpchisq_ring < best_cpchisq_ring)
+    best_cpchisq_ring = cpchisq_ring
+    best_cpchisq_ring_size = init_size
+  end if
+end do
+
+! >> Find best initial model
+float best_type,best_size
+float types(1),best_cpchisq_s(1),min_cpchisq(1),best_size_s(1)
+types = 1,2,4
+best_cpchisq_s = cpchisq_point, best_cpchisq_disk, best_cpchisq_ring
+best_size_s = 15,best_cpchisq_disk_size,best_cpchisq_ring_size
+min_cpchisq = minmax(best_cpchisq_s)(2)
+best_type = types(min_cpchisq(1))
+best_size = best_size_s(min_cpchisq(1))
+
+
+! >> phase self-calibration with the best found initial model
+test_init best_type,best_size
+
+
+!>> First round of cleaning and phase self-calibration until sigma is not
+!   improving more than sig_imp (in %)
+sig_imp=0.2
+repeat
+  old_sigma = sqrt(uvstat(chisq))
+  clrmod true,true
+  clrf rms_target,source_flux,0,false,true,true
+  sigma = sqrt(uvstat(chisq))
+  print "sigma change=", old_sigma, sigma, (old_sigma - sigma) / old_sigma * 100
+until ((old_sigma - sigma) / old_sigma * 100 < sig_imp)
+
+
+!>> Final statistics
+restore 0.02
+pico=peak(flux,max)
+invert
+floor=3*imstat(rms)+imstat(mean)
+print ""; print "  ==> Image statistic  <=="; print ""
+print "  ==> Cleaned flux =", model_flux, " Jy"
+print "  ==> Closure-phase Chi2 =", uvstat(clphs_chisq)
+print "  ==> Visibilities Chi2 =", uvstat(chisq)
+print "  ==> rms data-model =", uvstat(rms)," Jy"
+print "  ==> Expected image noise =", imstat(noise)*1000.," mJy/beam"
+print "  ==> Actual image noise =", imstat(rms)*1000.," mJy/beam"
+print "  ==> Dynamic range (over 3-sigma) = ", pico/floor , "\n \n"
+
+integer of
+of = outfile(`"%%3%%2.stat"`)
+fprintf of, "Script version = " // script_version // " \n"
+fprintf of, "Cleaned flux = " //strnum(model_flux) // " Jy \n"
+fprintf of, "Closure-phase Chi2 = " // strnum(uvstat(clphs_chisq)) // "\n"
+fprintf of, "Visibilities Chi2 = " // strnum(uvstat(chisq)) // "\n"
+fprintf of, "rms data-model = " // strnum(uvstat(rms)) // " Jy \n"
+fprintf of, "Expected image noise = " // strnum(imstat(noise)*1000.) // " mJy/beam \n"
+fprintf of, "Actual image rms = " // strnum(imstat(rms)*1000.) // " mJy/beam \n"
+fprintf of, "Dynamic range (over 3-sigma) = " // strnum(pico/floor) // "\n \n"
+fprintf of, "Imaging data, mask, and parameters: \n"
+fprintf of, "uv data = " // uvdata // " \n"
+fprintf of, "Circular mask size = " // strnum(mask_size) // " uas \n"
+fprintf of, "rms_target = " // strnum(rms_target) // " \n"
+fprintf of, "Source flux = " // strnum(source_flux) // " Jy \n"
+fprintf of, "Clean niter = " // strnum(clean_niter) // " \n"
+fprintf of, "Clean gain = " // strnum(clean_gain) // " \n"
+fprintf of, "ALMA weight = " // strnum(ALMA_weight) // " \n"
+fprintf of, "uvbin = " // strnum(uvbin) // " \n"
+fprintf of, "uvpower = " // strnum(uvpower) // " \n"
+fprintf of, "Init model type (0:delta, 1:gaussian, 2:disk, 3:sphere, 4:ring) = " \
+            // strnum(best_type) // " \n"
+fprintf of, "Init model size = " // strnum(best_size) // " uas \n"
+close(of)
+
+
+! Saving model
+mapsize nx/4,dx,ny/4,dy
+restore 0.02
+save `"%%3%%2"`
+
+if (fin) quit
