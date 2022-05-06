@@ -1,28 +1,33 @@
-# DIFMAP M87 Stokes I Imaging Pipeline for EHT observations in April 2017
+# DIFMAP Sgr A* Stokes I Imaging Pipeline for EHT observations in April 2017
 
 **Authors:** The Event Horizon Telescope Collaboration et al.
 
-**Date:** April 10, 2019
+**Date:** May 12, 2022
 
+(should be updated)
 **Primary Reference:** [The Event Horizon Telescope Collaboration, et al. 2019d, ApJL, 875, L4 (M87 Paper IV)](https://doi.org/10.3847/2041-8213/ab0e85)
 
-**Data Product Code:** [2019-D01-02](https://eventhorizontelescope.org/for-astronomers/data)
+(should be updated)
+**Data Product Code:** [2019-D02-01](https://eventhorizontelescope.org/for-astronomers/data)
 
 **Brief Description:**
-DIFMAP script for imaging EHT data using a given mask (set of cleaning windows)
+DIFMAP script for imaging EHT data 
 
-Requires Caltech's DIFMAP software for CLEAN imaging reconstruction, version v2.5b or above, that can be obtained from [ftp://ftp.astro.caltech.edu/pub/difmap/difmap.html](ftp://ftp.astro.caltech.edu/pub/difmap/difmap.html)
+Requires Caltech's DIFMAP software for CLEAN imaging reconstruction, version v2.5n or above, that can be obtained from [ftp://ftp.astro.caltech.edu/pub/difmap/difmap.html](ftp://ftp.astro.caltech.edu/pub/difmap/difmap.html)
 
-To reproduce fiducial EHT DIFMAP images of M87:
+To reproduce fiducial EHT DIFMAP images of Sgr A*:
 
-1. Place i) uv FITS file "your_file_name.uvfits", ii) Difmap script EHT_Difmap (this file), and iii) mask CircMask_r30_x-0.002_y0.022.win in the same directory
+1. Place i) Difmap script EHT_FitClean, ii) python wrapper script difmap_wrapper.py, and iii) bash to execute run_imaging.bash in the same directory
 
-2. Run Difmap and use the calling sequence:
+2. Edit run_imaging.bash with your i) path to the input uv FITS file, ii) output path name, iii) input uvfits file name (without extension; assuming the file has extension .uvfits), and iv) imaging parameters (Circular mask size in uas, ALMA weight in between 0 to 1, and uv weighting). 
 
-    @EHT_Difmap your_file_name,CircMask_r30_x-0.002_y0.022,-10,0.5,0.1,2,-1
+3. Use the calling sequence:
 
-The header of the EHT_Difmap file contains further information regarding the choice of script parameters
+    bash run_imaging.bash
 
+The header of the EHT_FitClean file contains further information regarding the choice of script parameters
+
+(should be updated)
 **References:**
 
 - [EHT Collaboration Data Portal Website](https://eventhorizontelescope.org/for-astronomers/data)
