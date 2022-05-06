@@ -53,7 +53,7 @@ def run_difmap(obsfile, inpath, outpath, mask_size, ALMA_weight, uvbin):
     if os.path.exists(inpath+obsfile+'.uvfits'):
         print('\n MERGED DATA PROPERLY CREATED! RUNNING DIFMAP\n')
         # run scripted Difmap
-        cmd = 'echo @EHT_FitClean_survey_v5 %s,%s,%s,%s,%s,%s,%s,%s,%s,%s,%s | difmap'%(inpath, obsfile,
+        cmd = 'echo @EHT_FitClean %s,%s,%s,%s,%s,%s,%s,%s,%s,%s,%s | difmap'%(inpath, obsfile,
                                                                                         outpath, mask_size,
                                                                                         rms_target, source_flux,
                                                                                         clean_niter, clean_gain,
