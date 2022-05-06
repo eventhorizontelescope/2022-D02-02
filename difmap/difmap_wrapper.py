@@ -17,14 +17,25 @@ def merge_bands(inpath, obsfile):
     Merge LO and HI band data sets
     """
 
-    if '_LO' in obsfile:
+    if '_LO_' in obsfile:
         obsfile_lo = obsfile
-        obsfile_hi = obsfile.replace('_LO', '_HI')
-    if '_HI' in obsfile:
-        obsfile_lo = obsfile.replace('_HI', '_LO')
+        obsfile_hi = obsfile.replace('_LO_', '_HI_')
+    if '_HI_' in obsfile:
+        obsfile_lo = obsfile.replace('_HI_', '_LO_')
         obsfile_hi = obsfile
 
-    outfile = obsfile_lo.replace('_LO', '_lo+hi')
+    if '_lo_' in obsfile:
+        obsfile_lo = obsfile
+        obsfile_hi = obsfile.replace('_lo_', '_hi_')
+    if '_hi_' in obsfile:
+        obsfile_lo = obsfile.replace('_hi_', '_lo_')
+        obsfile_hi = obsfile
+
+    if '_LO_' in obsfile_lo:
+        outfile = obsfile_lo.replace('_LO_', '_lo+hi_')
+    if '_lo_' in obsfile_lo:
+        outfile = obsfile_lo.replace('_lo_', '_lo+hi_')
+
     uvf_combine([inpath+obsfile_lo+'.uvfits', inpath+obsfile_hi+'.uvfits'], outp=inpath+outfile+'.uvfits')
     return outfile
 
