@@ -19,9 +19,11 @@ To reproduce fiducial EHT DIFMAP images of Sgr A*:
 
 1. Place i) Difmap script EHT_FitClean, ii) python wrapper script difmap_wrapper.py, and iii) bash to execute run_imaging.bash in the same directory
 
-2. Edit run_imaging.bash with your i) path to the input uv FITS file, ii) output path name, iii) input uvfits file name (without extension; assuming the file has extension .uvfits), and iv) imaging parameters (Circular mask size in uas, ALMA weight in between 0 to 1, and uv weighting). Note that, especially for Sgr A* imaging, it assumes the input uv FITS file already includes the pre-imaging considerations (e.g., scattering and variability mitigation). 
+2. Edit run_imaging.bash with your i) path to the input UVFITS file, ii) output path name, iii) input uvfits file name (without extension; assuming the file has extension .uvfits).
 
-3. Use the calling sequence:
+3. TopSet imaging parameters including the pre-imaging considerations are in tables under ./hdf5, so the imaging pipeline will load the tables by default. Set param_search_id='all' to run imaging to all TopSet parameters, otherwise specify the parameter id (e.g., param_search_id='0,1,2,3'
+
+4. Use the calling sequence:
 
     bash run_imaging.bash
 
