@@ -21,7 +21,7 @@ To reproduce fiducial EHT DIFMAP images of Sgr A*:
 
 2. Edit run_imaging.bash with your i) path to the input UVFITS file, ii) output path name, iii) input uvfits file name (without extension; assuming the file has extension .uvfits).
 
-3. TopSet imaging parameters including the pre-imaging considerations are in tables under ./hdf5, so the imaging pipeline will load the tables by default. Set param_search_id='all' to run imaging to all TopSet parameters, otherwise specify the parameter id (e.g., param_search_id='0,1,2,3'
+3. TopSet imaging parameters including the pre-imaging considerations are in hdf5 tables under ./hdf5, so the imaging pipeline will load the tables by default. Set param_search_id='all' to run imaging to all TopSet parameters, otherwise specify the parameter id (e.g., param_search_id='0,1,2,3'
 
 4. Use the calling sequence:
 
