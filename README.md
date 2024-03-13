@@ -1,4 +1,4 @@
-# First M87 EHT Results: Imaging Pipelines
+# First Sgr A* EHT Results: Imaging Pipelines
 
 **Authors:** The Event Horizon Telescope Collaboration et al.
 
