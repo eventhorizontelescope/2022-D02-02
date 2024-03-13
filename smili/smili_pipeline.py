@@ -21,24 +21,8 @@ installed with Anaconda on Ubuntu 18.04 LTS and MacOS 10.13 & 10.14 (with
 macport or homebrew).
 
 Notes:
-We note that, as described in 2022-D02-01, released visibility data sets are
-slightly different from data sets used in Paper III for two reasons.
-
-(1) They have only Stokes I, while Paper IV data sets have dual polarization at
-Stokes RR and LL. This slight difference in released data sets will change
-self-calibration procedures slightly in this pipeline since R and L gains are
-calibrated separately for the latter dual polarization data sets. We find that
-this does not produce any significant differences (within < ~5%) in resultant images.
-
-(2) In Paper III, this pipeline strictly uses Stoke I data; JCMT which has a
-single polarization is flagged when Stokes I visibilities are computed from RR
-and LL, while JCMT is included for self-calibration at the corresponding
-polarization. On the other hand, in the released data sets, JCMT has pseudo
-Stokes RR/LL data, such that Stokes I computed from them is identical to the
-original single Stokes. This will make JCMT be used in imaging, which change
-images slightly. For reproducibility of Paper IV results using this data set, in
-default, we will not use JCMT for imaging, as we did in Paper IV. If you want
-to use it to use all of data sets, you can specify --keepsinglepol to keep it.
+The pipeline requires the pre-imaging calibration script (preimcal.py) and scattering pickle file
+(e.g., obs_scatt_std_gauss_scaled_3599.pickle) at the same directory.
 
 The pipeline will output three files.
  - image (specified with -o option; assumed to be xxxx.fits here)
