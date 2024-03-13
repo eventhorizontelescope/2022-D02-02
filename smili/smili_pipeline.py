@@ -16,7 +16,7 @@ I (see M87 Paper III). As described in M87 Paper IV Section 6.2.3, the SMILI
 pipeline also uses the eht-imaging library (Chael et al. 2016, 2018)
 version 1.2.3 (Chael et al. 2019) solely for pre-imaging calibrations including
 time averaging, LMT calibration to use the input visibility data sets consistent
-with the eht-imaging imaging pipeline. The script has been tested in Python 2.7
+with the eht-imaging imaging pipeline. The script has been tested in Python 3
 installed with Anaconda on Ubuntu 18.04 LTS and MacOS 10.13 & 10.14 (with
 macport or homebrew).
 
@@ -102,7 +102,7 @@ parser.add_argument('-i','--input',metavar='Input uvfits file',nargs="+",type=st
 parser.add_argument('-o','--output',metavar='Output fits file',type=str,default=None,
                     help='Output fits file name')
 # Scattering
-parser.add_argument('--reftype', metavar='Refractive noise type', type=str, default="quarter1",
+parser.add_argument('--reftype', metavar='Refractive noise type', type=str, default="None",
                     help='Refractive noise table (quarter1, quarter2, dime). If not specified, do not add this budget.')
 parser.add_argument("--refscale", metavar="Scale of refractive scattering", type=float, default=1.)
 parser.add_argument('--deblurr', action='store_true', default=False,
@@ -331,9 +331,6 @@ obs_list_precal1=[]
 uvfits_list_precal1 = []
 for inputuvfile in inputuvfile_list:
     obs = eh.obsdata.load_uvfits(inputuvfile)
-    #obs = imf.preim_pipeline1(obs,is_normalized=is_normalized,
-    #                do_LMTcal=do_LMTcal, LMTcal_fwhm=lmtfwhm,
-    #                wint=wint, tint=tint)
     obs = preimcal.preim_pipeline(obs, is_normalized=is_normalized,
                     do_LMTcal=do_LMTcal, LMTcal_fwhm=lmtfwhm, tint=tint,
                     ref_optype=False, do_deblurr=False,do_psd_noise=False)
@@ -351,8 +348,6 @@ for inputuvfile in inputuvfile_list:
         else:
             initmovie = imf.set_initialmovie_pipeline(init_im,init_im_size,time_frame,uvfile_tmp,dx_uas,nx, "non-uniform")
             imprm_init["rt_prior"] = l1_prior
-
-
         Nt = initmovie.Nt
     os.system("rm %s"%(uvfile_tmp))
 # Set light curve after time average
@@ -371,9 +366,6 @@ imprm_init["lc_normalize"] = "dynamic"
 uvfits_list_precal2 = []
 
 for obs in obs_list_precal1:
-    #obs = imf.preim_pipeline2(obs, is_normalized=is_normalized, syserr=syserr,
-    #                             do_ref=do_ref, ref_optype=ref_optype, ref_scale=refscale, do_deblurr=do_deblurr,
-    #                             a=a, u0=u0, b=b, c=c)
     obs = preimcal.preim_pipeline(obs, is_normalized=is_normalized, syserr=syserr,
                             ref_optype=ref_optype, ref_scale=refscale, do_deblurr=do_deblurr,
                             a=a, u0=u0, b=b, c=c)
@@ -401,8 +393,6 @@ del vtable_list, btable_list, ctable_list
 if len(vtable.amp) == 0:
     raise ValueError("No data points exist in the input visibility data set.")
 
-
-
 # Flag data outside of the input time table
 idx = np.where(vtable.frmidx.values>=0)
 vtable = copy.deepcopy(vtable.loc[idx[0], :])
@@ -418,12 +408,12 @@ if len(btable.amp) == 0:
 if len(ctable.amp) == 0:
     ctable = None
 
-
 # fit beam
 beamprm = vtable.fit_beam(imdata.IMFITS(dx=dx_uas, nx=nx, angunit="uas"))
 cbeamprm = beamprm.copy()
 cbeamprm["majsize"] = (beamprm["majsize"]+beamprm["minsize"])/2.
 cbeamprm["minsize"] = cbeamprm["majsize"]
+
 
 #---------------------------------------------------------------------------
 # Step 3: Imaging
@@ -485,7 +475,6 @@ for iself in range(Nself):
         initmovie = outmovie.copy()
         initmovie = imf.edit_movie(initmovie,imprm,cbeamprm,shifttype).copy()
 
-
     # If iself==Nself, self-calibration won't be performed and exit the script.
     if Nself==1:
         iuv=0
@@ -529,8 +518,6 @@ for iself in range(Nself):
 
         i+=1
 
-        # debug
-
     # Update precal1 uvfits (before adding expected errors)
     uvfits_list_precal1 = copy.deepcopy(uvfits_list_mod)
     del uvfits_list_mod, output, uvfits
@@ -544,9 +531,6 @@ for iself in range(Nself):
         uvfits.to_uvfits(uvfile_tmp)
         obs = eh.obsdata.load_uvfits(uvfile_tmp) # debug
         os.system("rm %s"%(uvfile_tmp))
-        #obs = imf.preim_pipeline2(obs, is_normalized=is_normalized, syserr=syserr,
-        #                             do_ref=do_ref, ref_optype=ref_optype, ref_scale=refscale, do_deblurr=do_deblurr,
-        #                             a=a, u0=u0, b=b, c=c)
 
         obs = preimcal.preim_pipeline(obs, is_normalized=is_normalized, syserr=syserr,
                                      ref_optype=ref_optype, ref_scale=refscale, do_deblurr=do_deblurr,

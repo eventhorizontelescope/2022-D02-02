@@ -2,7 +2,7 @@
 
 **Authors:** The Event Horizon Telescope Collaboration et al.
 
-**Date:** May 10, 2022
+**Date:** May 12, 2022
 
 **Primary Reference:** [The Event Horizon Telescope Collaboration, et al. 2022c, ApJL, 930, L14 (Sgr A* Paper III)](https://ui.adsabs.harvard.edu/link_gateway/2022ApJ...930L..14E/doi:10.3847/2041-8213/ac6429)
 
@@ -10,10 +10,9 @@
 
 **Brief Description:**
 
-The pipeline reconstructs an image from a specified uvfits file simultaneously
-released in the EHT website (data release ID: [2022-D02-01](https://eventhorizontelescope.org/for-astronomers/data)) using a python-interfaced imaging package SMILI (Akiyama et al. 2017a,b) version 0.2.0 (Moriyama et al. 2022).
+The pipeline reconstructs an image from a specified uvfits file, which was released simultaneously with this pipeline on the EHT website (data release ID: [2022-D02-01](https://eventhorizontelescope.org/for-astronomers/data)) using a python-interfaced imaging package SMILI (Akiyama et al. 2017a,b) version 0.2.0 (Moriyama et al. 2022).
 
-This script assumes to load calibrated data sets at Stokes I (see Sgr A* Paper II). As described in Sgr A* Paper III Section 6.2.3, the SMILI pipeline also uses the eht-imaging library (Chael et al. 2016, 2018) version 1.1.0 (Chael et al. 2019) solely for pre-imaging calibrations including time averaging, LMT calibration to use the input visibility data sets consistent with the eht-imaging imaging pipeline. The script has been tested in Python 2.7 installed with Anaconda on Ubuntu 18.04 LTS and MacOS 10.13 & 10.14 (with macport or homebrew).
+This script is designed to load calibrated data sets at Stokes I (see Sgr A* Paper II). As detailed in Sgr A* Paper III Appendix D.3, the SMILI pipeline utilizes the eht-imaging library (Chael et al. 2016, 2018) version 1.2.3 (Chael et al. 2019) solely for pre-imaging calibrations including time averaging, LMT calibration to use the input visibility data sets consistent with the eht-imaging imaging pipeline. The script has been tested in Python 3 installed with Anaconda on  Ubuntu 18.04 LTS and MacOS 10.13 & 10.14, using either macport or homebrew.
 
 The pipeline will output three files.
 
@@ -21,40 +20,13 @@ The pipeline will output three files.
 - pre-calibrated uvfits file (xxxx.precal.uvfits)
 - self-calibrated uvfits file (xxxx.selfcal.uvfits)
 
-For usage and detail parameters of the pipeline, please read the help document associated in the imaging script "*python smili_imaging_pipeline.py --help*".
+For usage and detail parameters of the pipeline, please read the help document associated in the imaging script "*python smili_pipeline.py --help*".
 
 We also include an example driver *example_driver.py* to run *smili_imaging_pipeline.py* on all released data sets. You can run it by "*python example_driver.py --uvfitsdir < xxxx/uvfits > --nproc < number of the processors >*" For details, please have a look at the help document by "*python example_driver.py --help*".
 
-**Notes**
-
-We note that, as described in 2019-D01-01, released visibility data sets are
-slightly different from data sets used in Paper IV for two reasons.
-
-(1) They have only Stokes I, while Paper IV data sets have dual polarization at
-Stokes RR and LL. This slight difference in released data sets will change
-self-calibration procedures slightly in this pipeline since R and L gains are
-calibrated separately for the latter dual polarization data sets. We find that
-this does not produce any significant differences (within < ~5%) in resultant images.
-
-(2) In Paper IV, this pipeline strictly uses Stoke I data; JCMT which has a
-single polarization is flagged when Stokes I visibilities are computed from RR
-and LL, while JCMT is included for self-calibration at the corresponding
-polarization. On the other hand, in the released data sets, JCMT has pseudo
-Stokes RR/LL data, such that Stokes I computed from them is identical to the
-original single Stokes. This will make JCMT be used in imaging, which change
-images slightly. For reproducibility of Paper IV results using this data set, in
-default, we will not use JCMT for imaging, as we did in Paper IV. If you want
-to use it to use all of data sets, you can specify --keepsinglepol to keep it.
-
-**References:**
+**Additional References:**
 
 - [EHT Collaboration Data Portal Website](https://eventhorizontelescope.org/for-astronomers/data)
-- [The Event Horizon Telescope Collaboration, et al. 2019a, ApJL, 875, L1 (M87 Paper I)](https://doi.org/10.3847/2041-8213/ab0ec7)
-- [The Event Horizon Telescope Collaboration, et al. 2019b, ApJL, 875, L2 (M87 Paper II)](https://doi.org/10.3847/2041-8213/ab0c96)
-- [The Event Horizon Telescope Collaboration, et al. 2019c, ApJL, 875, L3 (M87 Paper III)](https://doi.org/10.3847/2041-8213/ab0c57)
-- [The Event Horizon Telescope Collaboration, et al. 2019d, ApJL, 875, L4 (M87 Paper IV)](https://doi.org/10.3847/2041-8213/ab0e85)
-- [The Event Horizon Telescope Collaboration, et al. 2019e, ApJL, 875, L5 (M87 Paper V)](https://doi.org/10.3847/2041-8213/ab0f43)
-- [The Event Horizon Telescope Collaboration, et al. 2019f, ApJL, 875, L6 (M87 Paper VI)](https://doi.org/10.3847/2041-8213/ab1141)
 - [Akiyama, K., Ikeda, S., Pleau, M. et al. 2017a, ApJ, 838, 1](https://ui.adsabs.harvard.edu/#abs/2017ApJ...838....1A)
 - [Akiyama, K., Kuramochi, K., Ikeda, S. et al. 2017b, AJ, 153, 159](https://ui.adsabs.harvard.edu/#abs/2017AJ....153..159A)
 - [Akiyama, K., Tazaki, F., Moriyama, K. et al. 2019, Zenodo (SMILI version 0.0.0)](https://zenodo.org/record/2616725)
